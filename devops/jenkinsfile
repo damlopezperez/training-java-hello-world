@@ -41,7 +41,7 @@ pipeline {
         script {
           sh 'docker run -d --rm -p 40084:8080  --name java-app   scalian_training/java-app'
           final def (String response, int code) =
-            sh(script: "curl -s -w '\\n%{response_code}'  $localhost:40084/hello", returnStdout: true)
+            sh(script: "curl -s -w '\\n%{response_code}'  localhost:40084/hello", returnStdout: true)
                 .trim()
                 .tokenize("\n")
           sh 'docker stop java-app'
