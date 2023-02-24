@@ -44,10 +44,11 @@ pipeline {
             sh(script: "curl -s -w '\\n%{response_code}'  $localhost:40084/hello", returnStdout: true)
                 .trim()
                 .tokenize("\n")
+          sh 'docker stop java-app'
           if (code != 200 && code != 201) {
               error("Testing ERROR. Returned status code = $status when calling $url")
           }
-          error("Testing Result: $response")
+          echo("Testing Result: $response")
         }
       }
     }
