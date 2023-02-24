@@ -56,15 +56,9 @@ pipeline {
 
     stage('Docker Push') {
       steps {
-        script {
-          if $TAG_NAME == "" {
-            TAG_NAME = env.BRANCH_NAME
-          }
-          echo("Tag:$TAG_NAME")
-          sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-      	  sh 'docker tag scalian_training/java-app adrianscalian/scalian_training_java-app:$TAG_NAME'
-          sh 'docker push adrianscalian/scalian_training_java-app:$TAG_NAME'
-        }
+        sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+      	sh 'docker tag scalian_training/java-app adrianscalian/scalian_training_java-app:$TAG_NAME'
+        sh 'docker push adrianscalian/scalian_training_java-app:$TAG_NAME'
       }
     }
 
@@ -96,6 +90,9 @@ pipeline {
 def getLastGitTag() {
     sh "git tag --sort version:refname | tail -1 > version.tmp"
     String tag = readFile 'version.tmp'
+    echo "Branch: ${scm.branches[0].name}"
+
+
     echo "Tag, ${tag}." 
     return tag
 }
