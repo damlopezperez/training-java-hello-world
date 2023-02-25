@@ -1,13 +1,21 @@
 #!groovy
+
+//@Library('functions')_
+
+
 pipeline {
-	agent none
+	agent any // Default Agent
 
   environment {
-		DOCKERHUB_CREDENTIALS=credentials('dockerhub-cred-adrianscalian')
+	  DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+    //TAG_NAME=getLastGitTag()
 	}
 
+
   stages {
-  	stage('Maven Install') {
+
+    stage('Maven Install') {
+      // Specifies where the entire Pipeline, or a specific stage, will execute in the Jenkins environment depending on where the agent section is placed
     	agent {
       	docker {
         	image 'maven:3.8.6-openjdk-11-slim'
@@ -18,54 +26,74 @@ pipeline {
       }
     }
 
+
     stage('Docker Build') {
-    	agent any
       steps {
-      	sh 'docker build -t scalian_training/java-app -f devops/Dockerfile .'
+        sh 'du -sh $WORKSPACE/target/*.jar'
+      	sh 'docker build -t scalian_training/java-app -f devops/Dockerfile --build-arg VERSION=1.0.2-SNAPSHOT .'
       }
     }
 
-    stage('Docker Login') {
-    	agent any
-      steps {
-      	sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-      }
-    }
+
+
+    // stage('Testing') {
+    //   steps {
+    //     // Block of scripted pipeline
+    //     script {
+    //       sh 'docker run -d --rm -p 40084:8080  --name java-app   scalian_training/java-app'
+    //       final def (String response, int code) =
+    //         sh(script: "curl -s -w '\\n%{response_code}'  localhost:40084/hello", returnStdout: true)
+    //             .trim()
+    //             .tokenize("\n")
+    //       sh 'docker stop java-app'
+    //       if (code != 200 && code != 201) {
+    //           error("Testing ERROR. Returned status code = $status when calling $url")
+    //       }
+    //       echo("Testing Result: $response")
+    //     }
+    //   }
+    // }
 
 
     stage('Docker Push') {
-    	agent any
       steps {
-      	sh 'docker tag scalian_training/java-app adrianscalian/scalian_training_java-app:$TAG_NAME'
-        sh 'docker push adrianscalian/scalian_training_java-app:$TAG_NAME'
+        sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+      	sh 'docker tag scalian_training/java-app adrianscalian/scalian_training_java-app:prueba_jenkins'
+        sh 'docker push adrianscalian/scalian_training_java-app:prueba_jenkins'
       }
     }
 
-    stage('Docker Publish') {
-    	when {
-        tag 'release-*'
-      }
-      steps {
-      	echo "Deploying $TAG_NAME"
-      }
-    }
+    // stage('Deploy') {
+    // 	when {
+    //     tag 'release-*'
+    //   }
+    //   steps {
+    //   	echo "Deploying $TAG_NAME"
+    //   }
+    // }
   }
 
   post {
     always  {
-        sh 'docker logout'
-        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-
+      sh 'docker logout'
+      
     }
     success {
-      if (env.BRANCH_NAME == 'master') {
-        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-        // send mail
-        } else if (env.BRANCH_NAME.startsWith('PR')) {
-          // also send email to tell people their PR status
-        } else {
-          // this is some other branch
-        } 
+      // send mail
+      echo "SUCCESS"
+      archiveArtifacts artifacts: 'target/*.jar'
     }
   }
+  
+}
+
+
+def getLastGitTag() {
+    sh "git tag --sort version:refname | tail -1 > version.tmp"
+    String tag = readFile 'version.tmp'
+    echo "Branch: ${scm.branches[0].name}"
+
+
+    echo "Tag, ${tag}." 
+    return tag
 }
