@@ -7,8 +7,9 @@ pipeline {
 	agent any // Default Agent
 
   environment {
-	  DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+	  //DOCKERHUB_CREDENTIALS=credentials('dockerhub')
     //TAG_NAME=getLastGitTag()
+    TAG_NAME=params.VERSION
 	}
 
 
@@ -30,7 +31,7 @@ pipeline {
     stage('Docker Build') {
       steps {
         sh 'du -sh $WORKSPACE/target/*.jar'
-      	sh 'docker build -t scalian_training/java-app -f devops/Dockerfile --build-arg VERSION=1.0.2-SNAPSHOT .'
+      	sh 'docker build -t scalian_training/java-app:$TAG_NAME -f devops/Dockerfile --build-arg VERSION=$TAG_NAME .'
       }
     }
 
@@ -75,7 +76,9 @@ pipeline {
 
   post {
     always  {
-      sh 'docker logout'
+      //sh 'docker logout'
+      archiveArtifacts artifacts: "target/*.jar"
+    
       
     }
     success {
