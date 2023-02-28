@@ -58,8 +58,8 @@ pipeline {
     stage('Docker Push') {
       steps {
         sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-      	sh 'docker tag scalian_training/java-app adrianscalian/scalian_training_java-app:prueba_jenkins'
-        sh 'docker push adrianscalian/scalian_training_java-app:prueba_jenkins'
+      	sh 'docker tag scalian_training/java-app dlopezsk/scalian_training_java-app:prueba_jenkins'
+        sh 'docker push dlopezsk/scalian_training_java-app:prueba_jenkins'
       }
     }
 
@@ -75,8 +75,8 @@ pipeline {
 
   post {
     always  {
-      //sh 'docker logout'
-      archiveArtifacts artifacts: "target/*.jar"
+      sh 'docker logout'
+      //archiveArtifacts artifacts: "target/*.jar"
     
       
     }
