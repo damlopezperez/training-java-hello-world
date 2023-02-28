@@ -6,10 +6,10 @@
 pipeline {
 	agent any // Default Agent
 
-  //environment {
-	  //DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+  environment {
+	  DOCKERHUB_CREDENTIALS=credentials('DockerHub')
     //TAG_NAME=getLastGitTag()
-	//}
+	}
 
 
   stages {
